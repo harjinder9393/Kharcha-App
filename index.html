@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#1d4ed8"/>
+  <link rel="manifest" href="manifest.json">
+  <title>ਮੇਰੇ ਖਰਚੇ</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .app {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    .top {
+      background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+      padding: 20px;
+      border-radius: 22px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.25);
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    .sub { opacity: .9; font-size: 15px; }
+    .install-box {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 12px;
+      margin-bottom: 14px;
+      display: none;
+      gap: 10px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 15px;
+    }
+    .balance-card {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #064e3b, #065f46);
+    }
+    .label { color: #94a3b8; font-size: 13px; }
+    .balance-card .label { color: #bbf7d0; }
+    .amount { font-size: 26px; font-weight: 800; margin-top: 4px; }
+    .balance-amount { font-size: 34px; }
+    .money-box, form {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    input, select, button {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 13px;
+      font-size: 16px;
+      outline: none;
+    }
+    input, select {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    button {
+      background: #22c55e;
+      color: #052e16;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    button:active { transform: scale(.99); }
+    .save-balance { background: #38bdf8; color: #082f49; }
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .list { display: grid; gap: 10px; }
+    .item {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .title { font-weight: 800; font-size: 17px; }
+    .meta { color: #94a3b8; font-size: 13px; margin-top: 3px; }
+    .price { font-size: 19px; font-weight: 900; text-align: right; }
+    .delete {
+      background: #ef4444;
+      color: white;
+      padding: 8px 11px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 7px;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .secondary { background: #334155; color: #e5e7eb; }
+    .danger { background: #dc2626; color: #fff; }
+    .empty {
+      text-align: center;
+      padding: 24px;
+      color: #94a3b8;
+      border: 1px dashed rgba(255,255,255,.15);
+      border-radius: 18px;
+    }
+    .note {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    @media (max-width: 560px) {
+      .cards, .row, .filters, .actions { grid-template-columns: 1fr; }
+      h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <h1>💰 ਮੇਰੇ ਖਰਚੇ</h1>
+      <div class="sub">Installable app — data browser/app storage vich save rahega.</div>
+    </div>
+
+    <div class="install-box" id="installBox">
+      <button id="installBtn">📲 App Install ਕਰੋ</button>
+      <div class="note">Install button na dikhe taan Chrome menu ⋮ → Add to Home screen dabao.</div>
+    </div>
+
+    <div class="money-box">
+      <div class="row">
+        <input id="startingMoney" type="number" min="0" step="1" placeholder="ਆਪਣੇ ਕੋਲ ਕੁੱਲ ਪੈਸੇ ₹" />
+        <button class="save-balance" id="saveMoneyBtn" type="button">Total Paise Save</button>
+      </div>
+      <div class="note">Example: je tuhade kol ₹50,000 ne, ithe 50000 save karo. Fer kharche aape minus hunde jaan ge.</div>
+    </div>
+
+    <div class="cards">
+      <div class="card balance-card">
+        <div class="label">ਬਾਕੀ ਪੈਸੇ</div>
+        <div class="amount balance-amount" id="remainingAmount">₹0</div>
+      </div>
+      <div class="card">
+        <div class="label">ਕੁੱਲ ਪੈਸੇ</div>
+        <div class="amount" id="startingAmount">₹0</div>
+      </div>
+      <div class="card">
+        <div class="label">ਕੁੱਲ ਖਰਚਾ</div>
+        <div class="amount" id="totalAmount">₹0</div>
+      </div>
+      <div class="card">
+        <div class="label">ਇਸ ਮਹੀਨੇ</div>
+        <div class="amount" id="monthAmount">₹0</div>
+      </div>
+    </div>
+
+    <form id="expenseForm">
+      <input id="title" placeholder="ਖਰਚਾ ਕਿਸ ਚੀਜ਼ ਤੇ? ਜਿਵੇਂ Petrol (optional)" />
+      <div class="row">
+        <input id="amount" type="number" min="1" step="1" placeholder="ਰਕਮ ₹" required />
+        <input id="date" type="date" required />
+      </div>
+      <div class="row">
+        <select id="category">
+          <option>ਘਰ</option>
+          <option>ਖਾਣਾ</option>
+          <option>ਪੈਟਰੋਲ</option>
+          <option>ਮੋਬਾਈਲ/ਇੰਟਰਨੈੱਟ</option>
+          <option>ਕੱਪੜੇ</option>
+          <option>ਕੰਮ</option>
+          <option>ਹੋਰ</option>
+        </select>
+        <button type="submit">+ ਖਰਚਾ Add ਕਰੋ</button>
+      </div>
+    </form>
+
+    <div class="filters">
+      <select id="filterCategory">
+        <option value="all">ਸਾਰੀਆਂ Categories</option>
+        <option>ਘਰ</option>
+        <option>ਖਾਣਾ</option>
+        <option>ਪੈਟਰੋਲ</option>
+        <option>ਮੋਬਾਈਲ/ਇੰਟਰਨੈੱਟ</option>
+        <option>ਕੱਪੜੇ</option>
+        <option>ਕੰਮ</option>
+        <option>ਹੋਰ</option>
+      </select>
+      <input id="search" placeholder="Search ਕਰੋ..." />
+    </div>
+
+    <div class="list" id="expenseList"></div>
+
+    <div class="actions">
+      <button class="secondary" id="exportBtn">Backup Download</button>
+      <button class="danger" id="clearBtn">ਸਾਰੇ ਖਰਚੇ Clear</button>
+    </div>
+  </div>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js");
+      });
+    }
+
+    let deferredPrompt;
+    const installBox = document.getElementById("installBox");
+    const installBtn = document.getElementById("installBtn");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBox.style.display = "grid";
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBox.style.display = "none";
+    });
+
+    const STORAGE_KEY = "my_expenses_punjabi_app_v2";
+    const OLD_STORAGE_KEY = "my_expenses_punjabi_app_v1";
+    const MONEY_KEY = "my_expenses_starting_money_v1";
+
+    let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY) || "[]");
+    let startingMoney = Number(localStorage.getItem(MONEY_KEY) || 0);
+
+    const form = document.getElementById("expenseForm");
+    const titleEl = document.getElementById("title");
+    const amountEl = document.getElementById("amount");
+    const dateEl = document.getElementById("date");
+    const categoryEl = document.getElementById("category");
+    const listEl = document.getElementById("expenseList");
+    const totalAmountEl = document.getElementById("totalAmount");
+    const monthAmountEl = document.getElementById("monthAmount");
+    const startingAmountEl = document.getElementById("startingAmount");
+    const remainingAmountEl = document.getElementById("remainingAmount");
+    const startingMoneyEl = document.getElementById("startingMoney");
+    const saveMoneyBtn = document.getElementById("saveMoneyBtn");
+    const filterCategoryEl = document.getElementById("filterCategory");
+    const searchEl = document.getElementById("search");
+
+    dateEl.valueAsDate = new Date();
+    startingMoneyEl.value = startingMoney || "";
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+      localStorage.setItem(MONEY_KEY, String(startingMoney));
+    }
+
+    function money(num) {
+      const n = Number(num || 0);
+      const sign = n < 0 ? "-₹" : "₹";
+      return sign + Math.abs(n).toLocaleString("en-IN");
+    }
+
+    function render() {
+      const categoryFilter = filterCategoryEl.value;
+      const search = searchEl.value.trim().toLowerCase();
+
+      let shown = expenses
+        .filter(e => categoryFilter === "all" || e.category === categoryFilter)
+        .filter(e => e.title.toLowerCase().includes(search) || e.category.toLowerCase().includes(search))
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+      const remaining = startingMoney - total;
+
+      const now = new Date();
+      const month = now.getMonth();
+      const year = now.getFullYear();
+      const monthTotal = expenses
+        .filter(e => {
+          const d = new Date(e.date);
+          return d.getMonth() === month && d.getFullYear() === year;
+        })
+        .reduce((sum, e) => sum + Number(e.amount), 0);
+
+      startingAmountEl.textContent = money(startingMoney);
+      remainingAmountEl.textContent = money(remaining);
+      totalAmountEl.textContent = money(total);
+      monthAmountEl.textContent = money(monthTotal);
+      remainingAmountEl.style.color = remaining < 0 ? "#fecaca" : "#e5e7eb";
+
+      if (shown.length === 0) {
+        listEl.innerHTML = '<div class="empty">ਹਾਲੇ ਕੋਈ ਖਰਚਾ ਨਹੀਂ ਮਿਲਿਆ</div>';
+        return;
+      }
+
+      listEl.innerHTML = shown.map(e => `
+        <div class="item">
+          <div>
+            <div class="title">${escapeHtml(e.title)}</div>
+            <div class="meta">${escapeHtml(e.category)} • ${formatDate(e.date)}</div>
+          </div>
+          <div>
+            <div class="price">${money(e.amount)}</div>
+            <button class="delete" onclick="deleteExpense('${e.id}')">Delete</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, function(m) {
+        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[m];
+      });
+    }
+
+    window.deleteExpense = function(id) {
+      if (!confirm("Eh kharcha delete karna?")) return;
+      expenses = expenses.filter(e => e.id !== id);
+      save();
+      render();
+    }
+
+    saveMoneyBtn.addEventListener("click", () => {
+      startingMoney = Number(startingMoneyEl.value || 0);
+      save();
+      render();
+      alert("Total paise save ho gaye.");
+    });
+
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      expenses.push({
+        id: Date.now().toString(),
+        title: titleEl.value.trim() || "ਖਰਚਾ",
+        amount: Number(amountEl.value),
+        date: dateEl.value,
+        category: categoryEl.value
+      });
+      save();
+      form.reset();
+      dateEl.valueAsDate = new Date();
+      startingMoneyEl.value = startingMoney || "";
+      render();
+    });
+
+    filterCategoryEl.addEventListener("change", render);
+    searchEl.addEventListener("input", render);
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (!expenses.length) return alert("Koi kharcha hai hi nahi.");
+      if (!confirm("Saare kharche clear karne?")) return;
+      if (!confirm("Pakka? Eh wapas nahi aaunge.")) return;
+      expenses = [];
+      save();
+      render();
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const backup = { startingMoney, expenses };
+      const data = JSON.stringify(backup, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mere-kharche-backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    save();
+    render();
+  </script>
+</body>
+</html>
