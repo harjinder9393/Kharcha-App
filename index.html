@@ -127,6 +127,8 @@
       margin-top: 12px;
     }
     .secondary { background: #334155; color: #e5e7eb; }
+    .import-label { display:block; text-align:center; background:#f59e0b; color:#451a03; font-weight:800; cursor:pointer; border-radius:14px; padding:13px; font-size:16px; }
+    #importFile { display:none; }
     .danger { background: #dc2626; color: #fff; }
     .empty {
       text-align: center;
@@ -223,6 +225,8 @@
 
     <div class="actions">
       <button class="secondary" id="exportBtn">Backup Download</button>
+      <label class="import-label" for="importFile">Backup Restore</label>
+      <input id="importFile" type="file" accept=".json,application/json" />
       <button class="danger" id="clearBtn">ਸਾਰੇ ਖਰਚੇ Clear</button>
     </div>
   </div>
@@ -399,6 +403,56 @@
       a.click();
       URL.revokeObjectURL(url);
     });
+
+
+    document.getElementById("importFile").addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const backup = JSON.parse(reader.result);
+
+          let importedExpenses = [];
+          let importedStartingMoney = 0;
+
+          if (Array.isArray(backup)) {
+            importedExpenses = backup;
+          } else {
+            importedExpenses = Array.isArray(backup.expenses) ? backup.expenses : [];
+            importedStartingMoney = Number(backup.startingMoney || 0);
+          }
+
+          if (!Array.isArray(importedExpenses)) {
+            alert("Backup file sahi nahi hai.");
+            return;
+          }
+
+          if (!confirm("Eh backup restore karan naal current kharche replace ho jaan ge. Continue?")) return;
+
+          expenses = importedExpenses.map((e, i) => ({
+            id: e.id || (Date.now().toString() + "_" + i),
+            title: e.title || "ਖਰਚਾ",
+            amount: Number(e.amount || 0),
+            date: e.date || new Date().toISOString().slice(0, 10),
+            category: e.category || "ਹੋਰ"
+          }));
+
+          startingMoney = importedStartingMoney;
+          startingMoneyEl.value = startingMoney || "";
+
+          save();
+          render();
+          alert("Backup restore ho gya.");
+          event.target.value = "";
+        } catch (err) {
+          alert("Backup file read nahi hoi. Sirf app wali JSON backup file select karo.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
 
     save();
     render();
